@@ -1,4 +1,3 @@
-export default defineEventHandler((event) => {
     interface RoiInputs {
       orders: number;
       confirmed: number;
@@ -11,19 +10,8 @@ export default defineEventHandler((event) => {
       fix_fee: number;
     }
   
-    let inputs:RoiInputs = {
-      orders: 50,
-      confirmed: 40,
-      delivered: 30,
-      product_cost: 30,
-      product_price: 60,
-      ship_fee: 3,
-      confirm_fee: 1,
-      marketing_fee: 1,
-      fix_fee: 0,
-    };
-  
-    function roi_calculator(inputs:RoiInputs){
+    export function roi_calculator(inputs:RoiInputs): number{
+      console.log("object", inputs)
       let profit: number;
       let confirmation_fee: number;
       let shipement_fee: number;
@@ -37,9 +25,7 @@ export default defineEventHandler((event) => {
   
   
       profit = (inputs.delivered * inputs.product_price) - (product_cost + shipement_fee + confirmation_fee + marketing_fee)
-  
+  console.log(profit)
       return profit;
     }
   
-    return roi_calculator(inputs);
-  })
