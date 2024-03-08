@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { roi_calculator } from "~/utils";
 import type {Resource} from "@youcan/qantra/src/types";
+import { Bar } from 'vue-chartjs';
+import {
+  Chart as ChartJS,
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale,
+} from 'chart.js';
+import { ref } from 'vue';
 import {isArray} from "@vue/shared";
 
 const orders = ref<number>(100);
@@ -12,6 +23,7 @@ const ship_fee = ref<number>(5);
 const confirm_fee = ref<number>(2);
 const marketing_fee = ref<number>(5);
 const fix_fee = ref<number>(0);
+const profit = ref<number>(0);
 
 const {data: products} = useFetch<Resource[] | null>('/products');
 const {data: recievedOrders} = useFetch<Resource[] | null>('/orders');
@@ -20,14 +32,38 @@ const showPicker = ref(false);
 const selectedResources = ref<Resource[] | null>([]);
 const resources = ref<Resource[] | null>(products?.value?.data ?? null);
 
+ChartJS.register(
+  Title,
+  Tooltip,
+  Legend,
+  BarElement,
+  CategoryScale,
+  LinearScale
+);
+
+const fees = ref(fix_fee.value + ship_fee.value + marketing_fee.value + confirm_fee.value)
+const chartData = ref({
+  labels: ['Estimated rev', 'Profit', 'Fee'],
+  datasets: [
+    {
+      label: 'Data One',
+      backgroundColor: ['rgb(113, 181, 244)', 'rgb(115, 227, 167)', 'rgb(220, 81, 81)'],
+      data: [(orders.value * product_price.value) - (fees.value * orders.value), profit.value, fees.value],
+    },
+  ],
+});
+const chartOptions = ref({
+  responsive: true,
+  maintainAspectRatio: false,
+});
+
 const onConfirm = (resources: Resource[]) => {
   selectedResources.value = resources;
   showPicker.value = false;
 };
 
 function handleCalculation() {
-  console.log("in the function");
-  let profit = roi_calculator({
+  profit.value = roi_calculator({
     orders: orders.value,
     confirmed: confirmed.value,
     delivered: delivered.value,
@@ -77,12 +113,23 @@ watch(selectedResources, (nv) => {
         <img src="~/assets/logo.png" />
         <h2>ROI Compass</h2>
       </div>
-      <h4>
-        Welcome to ROI Compass – the premier ROI simulator designed to elevate your
-        financial strategy.
-      </h4>
+      <p class="description">Welcome to ROI Compass. The premier ROI simulator designed to elevate your
+        financial strategy.</p>
+        
+      <Note class="instructions">
+        <template #icon>
+          
+        </template>
+        <template #content>
+          <p>This Profit Simulation Calculator allows you to estimate the profit of a product based on input data. You can use it in two ways</p>
+          <p class="title">Manual Entry Method</p>
+          <p>For manual entry, input values like cost price, selling price, quantity sold, and additional costs, then click "Calculate"</p>
+          <p class="title">Product Selection Method</p>
+          <p>Choose a product from the dropdown list and complete filling the inputs</p>
+        </template>
+      </Note>
     </div>
-    <div class="product-simulation-form">
+    <div class="form">
       <ResourcePicker
         v-model:visible="showPicker"
         :resources="resources"
@@ -93,68 +140,78 @@ watch(selectedResources, (nv) => {
       <PrimaryButton @click="showPicker = true">
         <span>Select a product</span>
       </PrimaryButton>
+      <p class="label">Orders</p>
       <div class="line">
         <InputGroup>
-          <template #label> Orders </template>
+          <template #label> Orders number</template>
           <template #input>
-            <Input v-model="orders" />
+            <Input v-model="orders" type="number"/>
           </template>
         </InputGroup>
         <InputGroup>
           <template #label> Confirmed orders </template>
           <template #input>
-            <Input v-model="confirmed" />
+            <Input v-model="confirmed" type="number"/>
           </template>
         </InputGroup>
         <InputGroup>
           <template #label> Delivered orders </template>
           <template #input>
-            <Input v-model="delivered" />
-          </template>
-        </InputGroup>
-        <InputGroup>
-          <template #label> Product cost </template>
-          <template #input>
-            <Input v-model="product_cost" />
+            <Input v-model="delivered" type="number"/>
           </template>
         </InputGroup>
       </div>
-
+      <p class="label">Product</p>
       <div class="line">
         <InputGroup>
-          <template #label> Product price </template>
+          <template #label> Product cost </template>
           <template #input>
-            <Input v-model="product_price" />
+            <Input v-model="product_cost" type="number"/>
           </template>
         </InputGroup>
         <InputGroup>
+          <template #label> Product price </template>
+          <template #input>
+            <Input v-model="product_price" type="number"/>
+          </template>
+        </InputGroup>
+    </div>
+    <p class="label">Fees</p>
+      <div class="line">
+        <InputGroup>
           <template #label> Shiping fee </template>
           <template #input>
-            <Input v-model="ship_fee" />
+            <Input v-model="ship_fee" type="number"/>
           </template>
         </InputGroup>
         <InputGroup>
           <template #label> Confirmation fee </template>
           <template #input>
-            <Input v-model="confirm_fee" />
+            <Input v-model="confirm_fee" type="number"/>
           </template>
         </InputGroup>
         <InputGroup>
           <template #label> Marketing fee </template>
           <template #input>
-            <Input v-model="marketing_fee" />
+            <Input v-model="marketing_fee" type="number"/>
           </template>
         </InputGroup>
         <InputGroup>
           <template #label> Other fee </template>
           <template #input>
-            <Input v-model="fix_fee" />
+            <Input v-model="fix_fee" type="number"/>
           </template>
         </InputGroup>
-        <PrimaryButton @click="() => handleCalculation()"> Primary Button </PrimaryButton>
+      </div>
+      <div class="line">
+        <PrimaryButton class="submit" @click="() => handleCalculation()"> Calculate profit </PrimaryButton>
         <div class="result">
-          <p>PROFIT :</p>
+          <p>PROFIT : {{ profit }}</p>
         </div>
+      </div>
+      <p class="label">Profit chart</p>
+      <div class="chart">
+        <Bar :data="chartData" :options="chartOptions" />
       </div>
     </div>
   </div>
@@ -168,7 +225,21 @@ html {
 .app {
   display: flex;
   flex-direction: column;
+  background-color: var(--base-white) !important;
   gap: 20px;
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  padding: 30px;
+  margin: 10px;
+}
+
+.label{
+font: var(--text-md-bold)
+
+}
+.submit{
+  height: fit-content;
+  align-self: center;
 }
 
 .logo {
@@ -184,7 +255,9 @@ html {
 .intro {
   margin: 10px;
 }
-
+.description{
+  font: var(--text-md-semi-bold)
+}
 .result {
   border: 1px solid var(--blue-100);
   width: 200px;
@@ -192,9 +265,16 @@ html {
   background: var(--blue-50);
   padding: 20px;
   border-radius: 6px;
+  height: fit-content;
+}
+.instructions{
+  max-width: unset !important
+}
+.instructions .title{
+  font: var(--text-sm-bold)
 }
 
-.product-simulation-form {
+.form {
   align-items: flex-start;
   justify-content: flex-start;
   display: flex;
@@ -203,14 +283,21 @@ html {
   border: 1px solid var(--gray-100);
   border-radius: 8px;
   padding: 30px;
-  background-color: var(--base-white) !important;
   width: 80%;
-  align-self: center;
 }
 
 .line {
   display: flex;
   flex-direction: row;
   gap: 20px;
+}
+
+.line:last-child{
+margin-top: 20px;
+}
+
+.chart{
+  width: 100%;
+    height: 400px;
 }
 </style>

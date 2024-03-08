@@ -2,4 +2,5 @@
 export default defineNuxtConfig({
   extends: ["./youcan"],
   devtools: { enabled: true },
+  plugins: ['@/plugins/chart.js'],
 });
