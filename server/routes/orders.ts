@@ -8,14 +8,16 @@ export default defineEventHandler(async (event) => {
             return { error: 'Access token is required for this API request' };
         }
 
-       const existingProductIds = [
-           "1a2144fb-57cf-41df-abf9-5ee039b7bd07",
-           "3d3c90d2-542d-4d59-ac93-59c230766360",
-           "779cf470-31c8-450c-8a4e-13bc1944fb12",
-           "f20e41f1-b90a-45da-965c-117b7447b63e",
-           "c821e727-1599-4c70-8fb8-55024a327c6d"
-       ];
+        const storeResponse = await useApi('https://api.youcanshop.dev/me', 'GET', session.accessToken);
 
+        if (storeResponse.error) {
+            return { error: 'Failed to fetch store details' };
+
+        }
+
+        const products =  await useApi(`https://${storeResponse.slug}.youcanshop.dev/api/products`, 'GET', session.accessToken);
+
+        const existingProductIds = products?.data.map((p : any)=> p.id);
         function generateRandomInfo() {
             const uniqueProductId = existingProductIds.pop();
             if (!uniqueProductId) {
