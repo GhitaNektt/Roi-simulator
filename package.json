@@ -26,7 +26,10 @@
     "@youcan/ui-core": "2.5.9-beta.1",
     "@youcan/ui-icons": "2.5.9-beta.1",
     "@youcan/ui-vue3": "2.5.9-beta.1",
+    "chart.js": "^4.4.2",
     "isbot": "^4.2.0",
-    "jsonwebtoken": "^9.0.2"
+    "jsonwebtoken": "^9.0.2",
+    "vue": "^3.4.21",
+    "vue-chartjs": "^5.3.0"
   }
 }
