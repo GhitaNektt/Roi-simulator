@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { roi_calculator } from "~/utils";
 import type {Resource} from "@youcan/qantra/src/types";
+import {isArray} from "@vue/shared";
 
 const orders = ref<number>(100);
 const confirmed = ref<number>(50);
@@ -13,6 +14,8 @@ const marketing_fee = ref<number>(5);
 const fix_fee = ref<number>(0);
 
 const {data: products} = useFetch<Resource[] | null>('/products');
+const {data: recievedOrders} = useFetch<Resource[] | null>('/orders');
+
 const showPicker = ref(false);
 const selectedResources = ref<Resource[] | null>([]);
 const resources = ref<Resource[] | null>(products?.value?.data ?? null);
@@ -38,6 +41,33 @@ function handleCalculation() {
   console.log("this is the profit ", profit);
   return profit;
 }
+
+watch(selectedResources, (nv) => {
+  console.log("orders",recievedOrders);
+  if(!nv || nv.length <= 0 || !isArray(recievedOrders.value)) {
+    return;
+  }
+
+  let productId = nv[0] ? nv[0].id : null;
+  console.log("productId" , productId);
+  if(!productId) {
+    return;
+  }
+  const order = recievedOrders.value.find((o : any) => o.product_id === productId);
+  console.log("order",order);
+
+  if(order) {
+    orders.value = order.orders;
+    confirmed.value =  order.confirmed;
+    delivered.value =  order.delivered;
+    product_cost.value =  order.product_cost;
+    product_price.value =  order.product_price;
+    ship_fee.value =  order.ship_fee;
+    confirm_fee.value =  order.confirm_fee;
+    marketing_fee.value =  order.marketing_fee;
+    fix_fee.value =  order.fix_fee;
+  }
+})
 </script>
 
 <template>
