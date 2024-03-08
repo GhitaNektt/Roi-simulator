@@ -1,6 +1,5 @@
 <script setup lang="ts">
 
-
 const orders = ref('');
 const confirmed = ref('');
 const delivered = ref('');
@@ -10,48 +9,27 @@ const ship_fee = ref('');
 const confirm_fee = ref('');
 const marketing_fee = ref('');
 const fix_fee = ref('');
+interface BaseResource {
+  id?: number | string
+  price?: string
+  stock?: number
+  name?: string
+  thumbnailUrl?: string
+  isChecked: boolean
+  isIndeterminate?: boolean
+}
+export interface Variant extends BaseResource {}
+export interface Resource extends BaseResource {
+  variants?: Variant[]
+}
 
-const MOCK_RESOURCES: any[] = [
-  {
-    id: 1,
-    thumbnailUrl: '',
-    name: 'Apple MacBook Pro',
-    price: '$2,499.00',
-    stock: 7,
-    isChecked: false,
-    variants: [
-      {
-        id: 33,
-        thumbnailUrl: '',
-        name: 'Apple MacBook Pro 16 M3 Max',
-        price: '$3,499.00',
-        stock: 3,
-        isChecked: false,
-      },
-      {
-        id: 21,
-        thumbnailUrl: '',
-        name: 'Apple MacBook Pro 14 M3 Pro',
-        price: '$2,499.00',
-        stock: 4,
-        isChecked: false,
-      },
-    ],
-  },
-  {
-    id: 2,
-    thumbnailUrl: '',
-    name: 'Apple iMac',
-    price: '$1,499.00',
-    stock: 2,
-    isChecked: false,
-  },
-];
+const { data: products } = useFetch<{ data: Resource[] | null }>('/products');
+
 const showPicker = ref(false);
-const selectedResources = ref<any[]>([]);
-const resources = ref<any[]>(MOCK_RESOURCES);
+const selectedResources = ref<Resource[] | null>([]);
+const resources = ref<Resource[] | null>(products?.value?.data ?? null);
 
-const onConfirm = (resources: any[]) => {
+const onConfirm = (resources: Resource[]) => {
   selectedResources.value = resources;
   showPicker.value = false;
 };
