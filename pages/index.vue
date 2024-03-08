@@ -2,15 +2,15 @@
 import { roi_calculator } from "~/utils";
 import type {Resource} from "@youcan/qantra/src/types";
 
-const orders = ref<number>(0);
-const confirmed = ref<number>(0);
-const delivered= ref<number>(0);
-const product_cost= ref<number>(0);
-const product_price= ref<number>(0);
-const ship_fee= ref<number>(0);
-const confirm_fee= ref<number>(0);
-const marketing_fee= ref<number>(0);
-const fix_fee= ref<number>(0);
+const orders = ref<number>(100);
+const confirmed = ref<number>(50);
+const delivered = ref<number>(25);
+const product_cost = ref<number>(10);
+const product_price = ref<number>(50);
+const ship_fee = ref<number>(5);
+const confirm_fee = ref<number>(2);
+const marketing_fee = ref<number>(5);
+const fix_fee = ref<number>(0);
 
 const {data: products} = useFetch<Resource[] | null>('/products');
 const showPicker = ref(false);

@@ -1,4 +1,5 @@
-    interface RoiInputs {
+
+interface RoiInputs {
       orders: number;
       confirmed: number;
       delivered: number;
@@ -28,4 +29,3 @@
   console.log(profit)
       return profit;
     }
-  
