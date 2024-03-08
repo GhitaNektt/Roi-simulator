@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { roi_calculator } from "~/utils";
+import type {Resource} from "@youcan/qantra/src/types";
 
 const orders = ref<number>(0);
 const confirmed = ref<number>(0);
@@ -11,42 +12,7 @@ const confirm_fee= ref<number>(0);
 const marketing_fee= ref<number>(0);
 const fix_fee= ref<number>(0);
 
-const MOCK_RESOURCES: any[] = [
-  {
-    id: 1,
-    thumbnailUrl: "",
-    name: "Apple MacBook Pro",
-    price: "$2,499.00",
-    stock: 7,
-    isChecked: false,
-    variants: [
-      {
-        id: 33,
-        thumbnailUrl: "",
-        name: "Apple MacBook Pro 16 M3 Max",
-        price: "$3,499.00",
-        stock: 3,
-        isChecked: false,
-      },
-      {
-        id: 21,
-        thumbnailUrl: "",
-        name: "Apple MacBook Pro 14 M3 Pro",
-        price: "$2,499.00",
-        stock: 4,
-        isChecked: false,
-      },
-    ],
-  },
-  {
-    id: 2,
-    thumbnailUrl: "",
-    name: "Apple iMac",
-    price: "$1,499.00",
-    stock: 2,
-    isChecked: false,
-  },
-];
+const {data: products} = useFetch<Resource[] | null>('/products');
 const showPicker = ref(false);
 const selectedResources = ref<Resource[] | null>([]);
 const resources = ref<Resource[] | null>(products?.value?.data ?? null);
