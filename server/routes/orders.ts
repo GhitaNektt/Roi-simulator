@@ -1,15 +1,15 @@
+import { useApi } from "~/server/helpers/useApi";
+
 export default defineEventHandler(async (event) => {
-  const session = event.context.session;
+    try {
+        const session = event.context.session;
 
+        if (!session.accessToken) {
+            return { error: 'Access token is required for this API request' };
+        }
 
-  console.log(session.accessToken)
-
-  const response = await fetch('https://api.youcanshop.dev/orders', {
-      headers: {
-          Authorization: 'Bearer ' + session.accessToken
-      }
-  });
-  const orders = await response.json();
-
-  return orders;
+        return await useApi('https://api.youcanshop.dev/orders', 'GET', session.accessToken);
+    } catch ( error:any ) {
+        return { error: error.message };
+    }
 });
