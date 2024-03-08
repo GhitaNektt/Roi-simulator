@@ -8,7 +8,14 @@ export default defineEventHandler(async (event) => {
             return { error: 'Access token is required for this API request' };
         }
 
-        return await useApi('https://issam-elkhadir.youcanshop.dev/api/products', 'GET', session.accessToken);
+        const storeResponse = await useApi('https://api.youcanshop.dev/me', 'GET', session.accessToken);
+
+        if (storeResponse.error) {
+            return { error: 'Failed to fetch store details' };
+
+        }
+
+        return await useApi(`https://${storeResponse.slug}.youcanshop.dev/api/products`, 'GET', session.accessToken);
     } catch (error : any) {
         return { error: error.message };
     }

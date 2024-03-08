@@ -1,5 +1,6 @@
 <script setup lang="ts">
-
+const {data} = useFetch<{data: Record<string, {id:string}>}>('/products');
+console.log(data.value);
 </script>
 
 <template>
