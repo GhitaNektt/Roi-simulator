@@ -19,6 +19,10 @@ export default defineEventHandler(async (event) => {
 
         const existingProductIds = products?.data.map((p : any)=> p.id);
         function generateRandomInfo() {
+            const orders = Math.floor(Math.random() * 50) + 51;
+            const confirmed = Math.ceil(orders * 0.5);
+            const delivered = Math.ceil(orders * 0.3);
+
             const uniqueProductId = existingProductIds.pop();
             if (!uniqueProductId) {
                 return null;
@@ -26,9 +30,9 @@ export default defineEventHandler(async (event) => {
 
             return {
                 product_id: uniqueProductId,
-                orders: Math.floor(Math.random() * 100) + 1,
-                confirmed: Math.floor(Math.random() * 50) + 1,
-                delivered: Math.floor(Math.random() * 25) + 1,
+                orders,
+                confirmed,
+                delivered,
                 product_cost: Math.floor(Math.random() * 10) + 1,
                 product_price: Math.floor(Math.random() * 50) + 1,
                 ship_fee: Math.floor(Math.random() * 5) + 1,
