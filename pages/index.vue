@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { roi_calculator } from "~/utils";
 import type {Resource} from "@youcan/qantra/src/types";
+import { Pie } from 'vue-chartjs';
 import { Bar } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -10,18 +11,20 @@ import {
   BarElement,
   CategoryScale,
   LinearScale,
+  ArcElement,
 } from 'chart.js';
 import { ref } from 'vue';
 import {isArray} from "@vue/shared";
+ChartJS.register(ArcElement);
 
-const orders = ref<number>(100);
-const confirmed = ref<number>(50);
-const delivered = ref<number>(25);
-const product_cost = ref<number>(10);
-const product_price = ref<number>(50);
-const ship_fee = ref<number>(5);
-const confirm_fee = ref<number>(2);
-const marketing_fee = ref<number>(5);
+const orders = ref<number>(50);
+const confirmed = ref<number>(40);
+const delivered = ref<number>(30);
+const product_cost = ref<number>(15);
+const product_price = ref<number>(60);
+const ship_fee = ref<number>(30);
+const confirm_fee = ref<number>(1);
+const marketing_fee = ref<number>(1);
 const fix_fee = ref<number>(0);
 const profit = ref<number>(0);
 
@@ -41,14 +44,15 @@ ChartJS.register(
   LinearScale
 );
 
-const fees = ref(fix_fee.value + ship_fee.value + marketing_fee.value + confirm_fee.value)
+const fees = ref(fix_fee.value + marketing_fee.value + (delivered.value * product_cost.value) + (ship_fee.value * delivered.value) + (confirm_fee.value * confirmed.value))
+const estimated_rev = ref ((orders.value * product_price.value) - (orders.value * (marketing_fee.value + product_cost.value + ship_fee.value + confirm_fee.value) + fix_fee.value))
 const chartData = ref({
   labels: ['Estimated rev', 'Profit', 'Fee'],
   datasets: [
     {
       label: 'Data One',
       backgroundColor: ['rgb(113, 181, 244)', 'rgb(115, 227, 167)', 'rgb(220, 81, 81)'],
-      data: [(orders.value * product_price.value) - (fees.value * orders.value), profit.value, fees.value],
+      data: [estimated_rev.value, profit.value, fees.value],
     },
   ],
 });
@@ -56,6 +60,18 @@ const chartOptions = ref({
   responsive: true,
   maintainAspectRatio: false,
 });
+
+const chartFullfil = ref({
+  labels: ['Delivered', 'Delivering', 'Waiting Confirmation'],
+  datasets: [
+    {
+      label: 'Data One',
+      backgroundColor: ['rgb(113, 181, 244)', 'rgb(115, 227, 167)', 'rgb(220, 81, 81)'],
+      data: [delivered.value, orders.value - confirmed.value, orders.value - confirmed.value],
+    },
+  ],
+});
+
 
 const onConfirm = (resources: Resource[]) => {
   selectedResources.value = resources;
@@ -74,6 +90,7 @@ function handleCalculation() {
     marketing_fee: marketing_fee.value,
     fix_fee: fix_fee.value,
   });
+  
   console.log("this is the profit ", profit);
   return profit;
 }
@@ -126,6 +143,10 @@ watch(selectedResources, (nv) => {
           <p>For manual entry, input values like cost price, selling price, quantity sold, and additional costs, then click "Calculate"</p>
           <p class="title">Product Selection Method</p>
           <p>Choose a product from the dropdown list and complete filling the inputs</p>
+          <p class="label">Example of the calculation</p>
+          <p class="title">Let's have a product with the following scenario:</p>
+          <p>You have a product that cost you 15$, after your marketing strategy you succeeded to get 50 Leads (Orders) that cost you 1$ per lead, and the fullfilement center succeeded to confirm the order with 40 client but only delivers to 30 of them with the following fees, 1$ for the confirmation and 30$ for the shipment.</p>
+          <p>Supposing your selling this product with 60$, then you will get 360$ profits</p>
         </template>
       </Note>
     </div>
@@ -211,6 +232,7 @@ watch(selectedResources, (nv) => {
       </div>
       <p class="label">Profit chart</p>
       <div class="chart">
+        <Pie :data="chartFullfil" :options="chartOptions" />
         <Bar :data="chartData" :options="chartOptions" />
       </div>
     </div>

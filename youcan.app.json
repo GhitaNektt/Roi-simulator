@@ -1,6 +1,6 @@
 {
     "name": "roi-simulator",
-    "id": "dapp_2dPAFN4hVyjmovhqLwfTzwtRHu8",
+    "id": "dapp_2dOrZcz05uWUeI9UwMLDeQR1PgW",
     "app_url": "http://localhost:3000",
     "redirect_urls": [
         "http://localhost:3000/auth/callback"
@@ -9,6 +9,6 @@
         "scopes": [
             "*"
         ],
-        "client_id": "97"
+        "client_id": "78"
     }
 }
