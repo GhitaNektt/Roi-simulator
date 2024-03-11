@@ -3,16 +3,7 @@ import { roi_calculator } from "~/utils";
 import type {Resource} from "@youcan/qantra/src/types";
 import { Pie } from 'vue-chartjs';
 import { Bar } from 'vue-chartjs';
-import {
-  Chart as ChartJS,
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  ArcElement,
-} from 'chart.js';
+import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement } from 'chart.js';
 import { ref } from 'vue';
 import {isArray} from "@vue/shared";
 ChartJS.register(ArcElement);
@@ -27,6 +18,7 @@ const confirm_fee = ref<number>(1);
 const marketing_fee = ref<number>(1);
 const fix_fee = ref<number>(0);
 const profit = ref<number>(0);
+const show = ref<boolean>(true)
 
 const {data: products} = useFetch<Resource[] | null>('/products');
 const {data: recievedOrders} = useFetch<Resource[] | null>('/orders');
@@ -35,14 +27,7 @@ const showPicker = ref(false);
 const selectedResources = ref<Resource[] | null>([]);
 const resources = ref<Resource[] | null>(products?.value?.data ?? null);
 
-ChartJS.register(
-  Title,
-  Tooltip,
-  Legend,
-  BarElement,
-  CategoryScale,
-  LinearScale
-);
+ChartJS.register( Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const fees = ref(fix_fee.value + marketing_fee.value + (delivered.value * product_cost.value) + (ship_fee.value * delivered.value) + (confirm_fee.value * confirmed.value))
 const estimated_rev = ref ((orders.value * product_price.value) - (orders.value * (marketing_fee.value + product_cost.value + ship_fee.value + confirm_fee.value) + fix_fee.value))
@@ -50,12 +35,26 @@ const chartData = ref({
   labels: ['Estimated rev', 'Profit', 'Fee'],
   datasets: [
     {
-      label: 'Data One',
+      label: 'Data',
       backgroundColor: ['rgb(113, 181, 244)', 'rgb(115, 227, 167)', 'rgb(220, 81, 81)'],
       data: [estimated_rev.value, profit.value, fees.value],
     },
   ],
 });
+
+watch([orders, product_price, delivered, profit, fees], ([newProfit, newFees]) => {
+  chartData.value = {
+    labels: ['Estimated rev', 'Profit', 'Fee'],
+    datasets: [
+      {
+        label: 'Data',
+        backgroundColor: ['rgb(113, 181, 244)', 'rgb(115, 227, 167)', 'rgb(220, 81, 81)'],
+        data: [estimated_rev.value, newProfit, newFees],
+      },
+    ],
+  };
+});
+
 const chartOptions = ref({
   responsive: true,
   maintainAspectRatio: false,
@@ -65,8 +64,8 @@ const chartFullfil = ref({
   labels: ['Delivered', 'Delivering', 'Waiting Confirmation'],
   datasets: [
     {
-      label: 'Data One',
-      backgroundColor: ['rgb(113, 181, 244)', 'rgb(115, 227, 167)', 'rgb(220, 81, 81)'],
+      label: 'Data',
+      backgroundColor: ['rgb(115, 227, 167)', 'rgb(205, 213, 223)', 'rgb(247, 197, 115)'],
       data: [delivered.value, orders.value - confirmed.value, orders.value - confirmed.value],
     },
   ],
@@ -77,6 +76,10 @@ const onConfirm = (resources: Resource[]) => {
   selectedResources.value = resources;
   showPicker.value = false;
 };
+
+function handleClose(){
+  show.value = !show.value
+}
 
 function handleCalculation() {
   profit.value = roi_calculator({
@@ -90,8 +93,7 @@ function handleCalculation() {
     marketing_fee: marketing_fee.value,
     fix_fee: fix_fee.value,
   });
-  
-  console.log("this is the profit ", profit);
+
   return profit;
 }
 
@@ -128,27 +130,25 @@ watch(selectedResources, (nv) => {
     <div class="intro">
       <div class="logo">
         <img src="~/assets/logo.png" />
-        <h2>ROI Compass</h2>
       </div>
       <p class="description">Welcome to ROI Compass. The premier ROI simulator designed to elevate your
         financial strategy.</p>
-        
-      <Note class="instructions">
-        <template #icon>
-          
+      <Alert v-show="show" type="info" canClose @close="handleClose" class="instructions">
+        <template #title>
+          Intructions
         </template>
-        <template #content>
+        <template #description>
           <p>This Profit Simulation Calculator allows you to estimate the profit of a product based on input data. You can use it in two ways</p>
-          <p class="title">Manual Entry Method</p>
+          <p class="label">Manual Entry Method</p>
           <p>For manual entry, input values like cost price, selling price, quantity sold, and additional costs, then click "Calculate"</p>
-          <p class="title">Product Selection Method</p>
+          <p class="label">Product Selection Method</p>
           <p>Choose a product from the dropdown list and complete filling the inputs</p>
-          <p class="label">Example of the calculation</p>
+          <p class="label">Calculation example</p>
           <p class="title">Let's have a product with the following scenario:</p>
-          <p>You have a product that cost you 15$, after your marketing strategy you succeeded to get 50 Leads (Orders) that cost you 1$ per lead, and the fullfilement center succeeded to confirm the order with 40 client but only delivers to 30 of them with the following fees, 1$ for the confirmation and 30$ for the shipment.</p>
-          <p>Supposing your selling this product with 60$, then you will get 360$ profits</p>
+          <p>You have a product that you acquired for $15. Following your marketing efforts, you managed to secure 50 leads (orders) at a cost of $1 per lead. The fulfillment center successfully confirmed 40 orders but only delivered to 30 customers. The fees for confirmation were $1 each, and shipping cost $30 per delivery.</p>
+          <p>If you sell this product for $60, your total profit would amount to $360</p>
         </template>
-      </Note>
+      </Alert>
     </div>
     <div class="form">
       <ResourcePicker
@@ -196,8 +196,8 @@ watch(selectedResources, (nv) => {
             <Input v-model="product_price" type="number"/>
           </template>
         </InputGroup>
-    </div>
-    <p class="label">Fees</p>
+      </div>
+      <p class="label">Fees</p>
       <div class="line">
         <InputGroup>
           <template #label> Shiping fee </template>
@@ -224,16 +224,20 @@ watch(selectedResources, (nv) => {
           </template>
         </InputGroup>
       </div>
-      <div class="line">
+      <div class="line last">
         <PrimaryButton class="submit" @click="() => handleCalculation()"> Calculate profit </PrimaryButton>
         <div class="result">
-          <p>PROFIT : {{ profit }}</p>
+          <p>Profit : {{ profit }}</p>
         </div>
       </div>
       <p class="label">Profit chart</p>
-      <div class="chart">
-        <Pie :data="chartFullfil" :options="chartOptions" />
-        <Bar :data="chartData" :options="chartOptions" />
+      <div class="stats">
+        <div class="chart-container">
+          <Pie :data="chartFullfil" :options="chartOptions" />
+        </div>
+        <div class="chart-container">
+          <Bar :data="chartData" :options="chartOptions" />
+        </div>
       </div>
     </div>
   </div>
@@ -255,6 +259,14 @@ html {
   margin: 10px;
 }
 
+.instructions{
+  width: unset !important
+}
+
+.instructions .title{
+  font: var(--text-sm-bold)
+}
+
 .label{
 font: var(--text-md-bold)
 
@@ -264,21 +276,17 @@ font: var(--text-md-bold)
   align-self: center;
 }
 
-.logo {
-  display: flex;
-  gap: 10px;
-  color: var(--green-400);
-}
 .logo img {
-  width: 40px;
-  height: 40px;
+  width: 360px;
+  height: 50px;
+  margin-bottom: 20px;
 }
 
 .intro {
   margin: 10px;
 }
 .description{
-  font: var(--text-md-semi-bold)
+  font: var(--text-sm-regular)
 }
 .result {
   border: 1px solid var(--blue-100);
@@ -288,12 +296,6 @@ font: var(--text-md-bold)
   padding: 20px;
   border-radius: 6px;
   height: fit-content;
-}
-.instructions{
-  max-width: unset !important
-}
-.instructions .title{
-  font: var(--text-sm-bold)
 }
 
 .form {
@@ -305,7 +307,7 @@ font: var(--text-md-bold)
   border: 1px solid var(--gray-100);
   border-radius: 8px;
   padding: 30px;
-  width: 80%;
+  width: 90%;
 }
 
 .line {
@@ -314,12 +316,20 @@ font: var(--text-md-bold)
   gap: 20px;
 }
 
-.line:last-child{
-margin-top: 20px;
+.line.last {
+  margin-top: 25px;
 }
 
-.chart{
+.stats {
   width: 100%;
-    height: 400px;
+  height: 400px;
+  position: relative;
+  display: flex;
+  gap:16px
+}
+
+.chart-container{
+  height: 300px; 
+  flex: 1
 }
 </style>
